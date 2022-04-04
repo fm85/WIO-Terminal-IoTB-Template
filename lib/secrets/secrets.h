@@ -13,11 +13,11 @@
 #define SECRETS_H
 
 // WiFi data
-  const char* ssid = "SSID";            ///< WLAN SSID
-  const char* password =  "PASSWORD";   ///< WLAN Password
+  const char* ssid = "IoTB";                        ///< WLAN SSID
+  const char* password =  "Zukunftswerkstatt*5";    ///< WLAN Password
 
 // MQTT data
-  const char *mqtt_server = "test.mosquitto.org";   ///< MQTT Broker URL
+  const char *mqtt_server = "172.20.1.51";          ///< MQTT Broker URL
   const char *mqtt_user = "";                       ///< not used yet
   const char *mqtt_password = "";                   ///< not used yet
   const char *mqtt_id = "";                         ///< not used yet // optional

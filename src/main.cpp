@@ -27,8 +27,7 @@
 #include "pages.h"
 
 // START USER CODE: Includes
-
-
+#include "Servo.h"
 // END USER CODE: Includes
 
 /********************************************************************************************
@@ -39,8 +38,10 @@
 #define DISCONNECTED  0     ///< Verbindungsstatus für MQTT and WiFi
 
 // START USER CODE: Defines
+const uint32_t SERVO_POS_WINDOW_OPEN = 180;
+const uint32_t SERVO_POS_WINDOW_CLOSED = 145;
 
-
+#define MAGNET_SWITCH D6
 // END USER CODE: Defines
 
 /********************************************************************************************
@@ -75,8 +76,9 @@ char topicList[][TOPIC_LENGTH] =  ///< Liste der MQTT Topics, die abboniert werd
                                   ///< @todo Beispiel für MQTT
 {
   // START USER CODE: Subscribed Topics
-  "Example\0"   // Beispiel für ein Topic, Bitte löschen, wenn eigene Topics hinzugefügt werden
-
+  "demo_haus/2og/fenster/setze_status\0",   // Beispiel für ein Topic, Bitte löschen, wenn eigene Topics hinzugefügt werden
+  "demo_haus/2og/fenster/setze_winkel\0",
+  "demo_haus/2og/lampe\0"
   // END USER CODE: Subscribed Topics
 };
 
@@ -89,10 +91,11 @@ char log_text[15][TOPIC_LENGTH];            ///< startup log text, 15 lines with
 const long scanInterval = 10000;            ///< Interval time for WiFi strength und channel scanning 
 const long interfaceIconIntervall = 500;    ///< Interval time for icons refreshing
 const long mqttStateIntervall = 1000;       ///< Interval time for MQTT state
-const long userDefinedIntervall = 5000;     ///< Interval time for user defined perdiodic task
+const long userDefinedIntervall = 1000;     ///< Interval time for user defined perdiodic task
 
 // START USER CODE: Global Variables
 
+char g_fenster_zustand[20] = "offen";
 
 // END USER CODE: Global Variables
 
@@ -104,8 +107,7 @@ wio_wifi wio_Wifi = wio_wifi(addLogText);
 wio_mqtt wio_MQTT = wio_mqtt(addLogText);
 
 // START USER CODE: Objects
-
-
+Servo servoWindow;
 // END USER CODE: Objects
 
 
@@ -155,9 +157,14 @@ void setup() {
   wio_disp.loadingScreen(0);            // disable Loading screen
 
   // START USER CODE: Setup
-  currentPage = 0;                              // set currentPage
+  currentPage = 1;                              // set currentPage
   wio_disp.drawPage(pages_array[currentPage]);  // draw Page No. 1 (= currentPage)
-
+  servoWindow.attach(D0);
+  servoWindow.write(SERVO_POS_WINDOW_CLOSED);
+  delay(5000);
+  servoWindow.write(SERVO_POS_WINDOW_OPEN);
+  pinMode(MAGNET_SWITCH, INPUT);
+  pinMode(BCM3, OUTPUT);
   // END USER CODE: Setup
 }
 
@@ -213,6 +220,8 @@ void loop() {
     {
       case 1:
         // START USER CODE: PAGE 1 
+
+       
         
         // END USER CODE: PAGE 1
         break;
@@ -306,6 +315,13 @@ void loop() {
 
     case 1:
       // START USER CODE: Specific Page 1 Code
+      
+    if (strcmp(pages_array[1].lines[0].text, g_fenster_zustand) != 0)
+    {
+      strcpy(pages_array[1].lines[0].text, g_fenster_zustand);
+      wio_disp.updateLine(pages_array[1], 0,ONLY_VALUE);
+    }
+      
       
 
       // END USER CODE: Specific Page 1 Code
@@ -437,7 +453,14 @@ void periodicTasks()
   {
     previousMillis[3] = currentMillis;      // refresh previousMillis
     // START USER CODE: user periodic task
-      
+
+    if(digitalRead(MAGNET_SWITCH) == HIGH){
+      wio_MQTT.publishTopic_ConstString("demo_haus/2og/fenster/status", "zu", true);
+      strcpy(g_fenster_zustand, "zu");
+    }else{
+        wio_MQTT.publishTopic_ConstString("demo_haus/2og/fenster/status", "offen", true);
+        strcpy(g_fenster_zustand, "offen");
+    }
 
     // END USER CODE: user periodic task
   }
@@ -461,6 +484,7 @@ void periodicTasks()
 void callback(char* topic, byte* payload, unsigned int length)
 {
   int elem = 0;
+  int angle;
   wio_MQTT.setSubscribeState(true);     // set subscribe state (for display)
   
   char payload_str[length];
@@ -486,14 +510,19 @@ void callback(char* topic, byte* payload, unsigned int length)
       
     case 1:
       // START USER CODE: second element of the topicList
-
-
+      angle = atoi(payload_str);
+      servoWindow.write(angle);
       // END USER CODE: second element of the topicList
       break;
-
+      
     // START USER CODE: more elements of the topicList
-
-
+    case 2:
+      if( strcmp(payload_str, "on") ==0 ){
+        digitalWrite(BCM3,HIGH);
+      }else{
+        digitalWrite(BCM3,LOW);
+      }
+      break;
     // END USER CODE: more elements of the topicList
   }
 }

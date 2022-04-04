@@ -35,15 +35,11 @@ page_t pages_array[] =
   },
 // Page 1
   {
-    "TITEL",  
+    "Fenster",  
     { 
       //Name            | Typ     | Wert    | Textwert/Einheit  | Einstellung
-      { "Zeile 1",        TEXT,     0,        "",                 DEFAULT},           // Line 0
-      { "Zeile 2",        TEXT,     0,        "",                 DEFAULT},           // Line 1
-      { "Zeile 3",        TEXT,     0,        "",                 DEFAULT},           // Line 2
-      { "Zeile 4",        TEXT,     0,        "",                 DEFAULT},           // Line 3
-      { "Zeile 5",        TEXT,     0,        "",                 DEFAULT},           // Line 4
-      { "Zeile 6",        TEXT,     0,        "",                 DEFAULT}            // Line 5
+      { "Fenster",        TEXT,     0,        "offen",                 DEFAULT},           // Line 0
+      { "Zustand",        TEXT,     0,        "GUT",              DEFAULT},           // Line 1
     }
   },
 // Page 2
