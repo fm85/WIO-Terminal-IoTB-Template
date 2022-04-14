@@ -392,7 +392,7 @@ void periodicTasks()
         {
           wio_MQTT.clientLoop();    // MQTT client loop
           previousMillis[1] = currentMillis;                // refresh previousMillis
-          Serial.println("- update MQTT State");            // write Info to SerialPort
+//          Serial.println("- update MQTT State");            // write Info to SerialPort
           mqtt_pub_status = wio_MQTT.getPublishState();     // get publish state
           wio_MQTT.setPublishState(false);                  // reset publish state in the mqtt library
           mqtt_sub_status = wio_MQTT.getSubscribeState();   // get subscribe state
@@ -415,7 +415,7 @@ void periodicTasks()
   if((currentMillis - previousMillis[2] >= interfaceIconIntervall) || previousMillis[2] == 0)
   {
     previousMillis[2] = currentMillis;      // refresh previousMillis
-    Serial.println("- update Icons");       // write Info to SerialPort
+//    Serial.println("- update Icons");       // write Info to SerialPort
     wlan_status = wio_Wifi.WiFiStatus();    // read WiFi status
     if(wlan_status == DISCONNECTED)
     {
