@@ -8,7 +8,7 @@
  * Zusätzlich werden gewisse Interface Zustände angezeigt, sofern diese Verwendet werden.
  * zu den Interface gehören den WiFi, MQTT und SD Karte. \n 
  * @todo Auf einer Page die Interface Zustände genauer beschreiben. Coming soon...
- * @version 1.2
+ * @version 1.5
  * @date 14.02.2022
  * 
  * @copyright Copyright (c) 2022
@@ -210,7 +210,7 @@ void wio_display::drawPage(page_t p)
   drawHeader(p.title, sd_card_status, mqtt_s, wlan_s, wlan_st, wlan_ch);    // draw header
   for (int i = 0; i < NUMBERS_OF_LINES; i++)                                // for NUMBERS_OF_LINES times
   {
-    drawPageLine(p.lines[i], i + 1, FULL_LINE);                             // draw all the lines
+    drawPageLine(p.lines[i], i, FULL_LINE);                             // draw all the lines
   }
 }
 
@@ -225,7 +225,7 @@ void wio_display::updateContext(page_t p)
   // draw Lines
   for (int i = 0; i < NUMBERS_OF_LINES; i++)
   {
-    drawPageLine(p.lines[i], i + 1, ONLY_VALUE);
+    drawPageLine(p.lines[i], i, ONLY_VALUE);
   }
 }
 
@@ -233,14 +233,14 @@ void wio_display::updateContext(page_t p)
  * @brief Diese Methode Zeichnet eine Zeile neu. Mit dem Übergabeparameter setting, kann eingestellt werden, 
  * ob die ganze Zeile (Name und Wert) oder nur der Inhalt (Wert) neu gezeichnet wird.
  * @param p Seite (Page). Von der übergebenen Seite werden die darin beinhalteten Zeilen gezeichnet.
- * @param line_nr Die Zeilen Nummer,welche neu gezeichnet werden soll. \n Mögliche Parameter: 1 - @ref NUMBERS_OF_LINES
+ * @param line_nr Die Zeilen Nummer, welche neu gezeichnet werden soll. \n Mögliche Parameter: 0 - @ref NUMBERS_OF_LINES -1
  * @param setting Eine Option, was alles neu gezeichnet werden soll. @ref draw_setting_e
  *  - @p FULL_LINE: Zeichnet die komplette Zeile neu
  *  - @p ONLY_VALUE: Zeichnet nur den Zeilenwert neu
  */
 void wio_display::updateLine(page_t p, unsigned int line_nr, draw_setting_e setting)
 {
-  drawPageLine(p.lines[line_nr - 1], line_nr, setting);
+  drawPageLine(p.lines[line_nr], line_nr, setting);
 }
 
 /**
@@ -372,13 +372,21 @@ void wio_display::drawPageLine(line_t l, unsigned int line_nr, draw_setting_e se
 {
   char buf[40];
   int value;
+  int len;
+  static int line_length[2][NUMBERS_OF_LINES] = { {0,0,0,0,0,0}, {0,0,0,0,0,0} };   // init value for 6 lines
 
   tft.setFreeFont(FSS9);                    // set Font
   tft.setTextColor(TFT_WHITE, TFT_BLACK);   // set Color White and Background Black
 
   if (setting == FULL_LINE)
   {
-    tft.drawString(l.line_name, LINE_START_X, LINE_START_Y + ((line_nr - 1) * 30)); // write line name
+    len = tft.textWidth(l.line_name);   // measure length of the new string
+    if(len < line_length[0][line_nr])   // compare new length with old length
+    {
+      tft.fillRect(LINE_START_X, LINE_START_Y + (line_nr * 30), line_length[0][line_nr], 18, TFT_BLACK);    // draw black rectangle to clear old stuff
+    }
+    tft.drawString(l.line_name, LINE_START_X, LINE_START_Y + (line_nr * 30)); // write line name
+    line_length[0][line_nr] = len;                                            // refresh line length
   }
 
   // write line context, dependent of the line typ
@@ -387,13 +395,21 @@ void wio_display::drawPageLine(line_t l, unsigned int line_nr, draw_setting_e se
     case TEXT:
       if(tft.textWidth(l.text) <= 140)
       {
-        tft.drawString(l.text, LINE_VALUE_X, LINE_START_Y + ((line_nr - 1) * 30));  // draw line text
+        len = tft.textWidth(l.text);        // measure length of the new string
+        if(len < line_length[1][line_nr])   // compare new length with old length
+        {
+          tft.fillRect(LINE_VALUE_X, LINE_START_Y + (line_nr * 30), line_length[1][line_nr], 18, TFT_BLACK);  // draw black rectangle to clear old stuff
+        }
+        tft.drawString(l.text, LINE_VALUE_X, LINE_START_Y + (line_nr * 30));  // draw line text
+        line_length[1][line_nr] = len;                                        // refresh line length
       }
       else
       {
-        tft.setTextColor(TFT_RED, TFT_BLACK);   // set Color White and Background Black
-        tft.drawString("Text too long!!!", LINE_VALUE_X, LINE_START_Y + ((line_nr - 1) * 30));   // draws Error
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);   // set Color White and Background Black
+        tft.fillRect(LINE_VALUE_X, LINE_START_Y + (line_nr * 30), 180, 18, TFT_BLACK);      // draw black rectangle to clear old stuff
+        tft.setTextColor(TFT_RED, TFT_BLACK);                                               // set Color White and Background Black
+        tft.drawString("Text too long!!!", LINE_VALUE_X, LINE_START_Y + (line_nr * 30));    // draws Error
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);                                             // set Color White and Background Black
+        line_length[1][line_nr] = 0;                                                        // set line length to 0
       }
       break;
 
@@ -418,13 +434,21 @@ void wio_display::drawPageLine(line_t l, unsigned int line_nr, draw_setting_e se
       }
       if(tft.textWidth(buf) <= 140)
       {
-        tft.drawString(buf, LINE_VALUE_X, LINE_START_Y + ((line_nr - 1) * 30));   // draws value
+        len = tft.textWidth(buf);           // measure length of the new string
+        if(len < line_length[1][line_nr])   // compare new length with old length
+        {
+          tft.fillRect(LINE_VALUE_X, LINE_START_Y + (line_nr * 30), line_length[1][line_nr], 18, TFT_BLACK);    // draw black rectangle to clear old stuff
+        }
+        tft.drawString(buf, LINE_VALUE_X, LINE_START_Y + (line_nr * 30));   // draws value
+        line_length[1][line_nr] = len;                                      // refresh line length
       }
       else
       {
-        tft.setTextColor(TFT_RED, TFT_BLACK);   // set Color White and Background Black
-        tft.drawString("Text too long!!!", LINE_VALUE_X, LINE_START_Y + ((line_nr - 1) * 30));   // draws Error
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);   // set Color White and Background Black
+        tft.fillRect(LINE_VALUE_X, LINE_START_Y + (line_nr * 30), 180, 18, TFT_BLACK);      // draw black rectangle to clear old stuff
+        tft.setTextColor(TFT_BLACK, TFT_BLACK);                                             // set Color White and Background Black
+        tft.drawString("Text too long!!!", LINE_VALUE_X, LINE_START_Y + (line_nr * 30));    // draws Error
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);                                             // set Color White and Background Black
+        line_length[1][line_nr] = 0;                                                        // set line length to 0
       }
       break;
 
@@ -432,8 +456,8 @@ void wio_display::drawPageLine(line_t l, unsigned int line_nr, draw_setting_e se
       value = l.value;
       if (value > 100) value = 100;   // set upper limit
       if (value < 0)   value = 0;     // set under limit
-      tft.fillRect(LINE_VALUE_X, LINE_START_Y + ((line_nr - 1) * 30) - 2, 104, 20, TFT_WHITE);    // draw outer rectangle, color white
-      tft.fillRect(LINE_VALUE_X + 2, LINE_START_Y + ((line_nr - 1) * 30), value, 16, TFT_GREEN);  // draw inner rectangle, color: green
+      tft.fillRect(LINE_VALUE_X, LINE_START_Y + (line_nr * 30) - 2, 104, 20, TFT_WHITE);    // draw outer rectangle, color white
+      tft.fillRect(LINE_VALUE_X + 2, LINE_START_Y + (line_nr * 30), value, 16, TFT_GREEN);  // draw inner rectangle, color: green
       switch (l.setting)
       {
         // draw the value in the bar
@@ -441,7 +465,7 @@ void wio_display::drawPageLine(line_t l, unsigned int line_nr, draw_setting_e se
           tft.setFreeFont(FSS9);              // set font
           tft.setTextColor(TFT_BLACK);        // set text color black
           sprintf(buf, "%d", (int)l.value);   // convert value to string
-          tft.drawString(buf, LINE_VALUE_X + 42, LINE_START_Y + ((line_nr - 1) * 30));  // draw value
+          tft.drawString(buf, LINE_VALUE_X + 42, LINE_START_Y + (line_nr * 30));  // draw value
           break;
       }
       break;
@@ -468,7 +492,15 @@ void wio_display::drawPageLine(line_t l, unsigned int line_nr, draw_setting_e se
         default:
           sprintf(buf, "%d:%d", hou_, min_);            // convert time to string
       }
-      tft.drawString(buf, LINE_VALUE_X, LINE_START_Y + ((line_nr - 1) * 30));   // draw value
+
+      len = tft.textWidth(buf);           // measure length of the new string
+      if(len < line_length[1][line_nr])   // compare new length with old length
+      {
+        tft.fillRect(LINE_VALUE_X, LINE_START_Y + (line_nr * 30), line_length[1][line_nr], 18, TFT_BLACK);    // draw black rectangle to clear old stuff
+      }
+      tft.drawString(buf, LINE_VALUE_X, LINE_START_Y + (line_nr * 30));   // draw value
+      line_length[1][line_nr] = len;                                      // refresh line length
+
       }break;
 
     case END_LINE_TYP:
@@ -603,15 +635,6 @@ void wio_display::drawIcons(int mqtt_status, bool mqtt_pub, bool mqtt_sub, int w
   }
 
   // WLAN Status
-  if((old_wlan_status != wlan_status) || forced)   // has something changed or is draw forced
-  {
-    if(wlan_status == 0)     // if disconnected to wlan
-    {
-      wlan_strength = 99;   // set a really low wlan strength
-    }
-    old_wlan_status = wlan_status;  // overwrite old value
-  }
-
   // wlan strength
   if((old_wlan_strength != wlan_strength) || forced)   // has something changed or is draw forced
   {

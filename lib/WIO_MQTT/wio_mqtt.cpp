@@ -2,7 +2,7 @@
  * @file wio_mqtt.cpp
  * @author Beat Sturzenegger
  * @brief IoTB MQTT Bibliothek für das WIO Terminal
- * @version 1.1
+ * @version 1.4
  * @date 18.01.2022
  * 
  * @copyright Copyright (c) 2022
@@ -36,6 +36,7 @@ static cbLog_ cbMQTTLog;
 wio_mqtt::wio_mqtt(void (&func)(const char *, bool b))
 {
   cbMQTTLog = func;
+  randomSeed(analogRead(0));
 }
 
 /********************************************************************************************
@@ -55,23 +56,78 @@ void wio_mqtt::initMQTT(void (&func)(char *, byte *, unsigned int))
   client.setServer(mqtt_server, 1883);              // set MQTT broker url and port
   client.setCallback(_callback);                    // set callback function
   delay(1000);                                      // 1000ms delay
-  reconnect();                                      // connect to MQTT broker
+  while (!client.connected())     // Loop until we're reconnected
+  {
+    reconnect();                                      // connect to MQTT broker
+  }
 }
 
 /**
- * @brief Diese Methode publiziert eine MQTT Nachricht
+ * @brief Diese Methode publiziert eine MQTT Nachricht. Variabler char-Array als Payload.
  * 
  * @param topic Topic (Name) der Nachricht
  * @param payload Payload (Nutzdaten/Inhalt) der Nachricht
  * @param retain Soll die Nachricht gespeichert werden, auch wenn das Topic niemand abonniert hat.
  */
-void wio_mqtt::publishTopic(char *topic, char *payload, bool retain)
+void wio_mqtt::publishTopic_String(const char *topic, char *payload, bool retain)
 {
   pubState = true;                                      // set publish state to TRUE, because somthing will be sended
   Serial.println("PUBLISH");                            // print infos to SerialPort
   Serial.print("Topic: "); Serial.println(topic);
   Serial.print("Payload: "); Serial.println(payload);
   client.publish(topic, payload, retain);                       // publish the message
+}
+
+/**
+ * @brief Diese Methode publiziert eine MQTT Nachricht. Konstanter char-Array als Payload.
+ * 
+ * @param topic Topic (Name) der Nachricht
+ * @param payload Payload (Nutzdaten/Inhalt) der Nachricht
+ * @param retain Soll die Nachricht gespeichert werden, auch wenn das Topic niemand abonniert hat.
+ */
+void wio_mqtt::publishTopic_ConstString(const char *topic, const char *payload, bool retain)
+{
+  pubState = true;                                      // set publish state to TRUE, because somthing will be sended
+  Serial.println("PUBLISH");                            // print infos to SerialPort
+  Serial.print("Topic: "); Serial.println(topic);
+  Serial.print("Payload: "); Serial.println(payload);
+  client.publish(topic, payload, retain);                       // publish the message
+}
+
+/**
+ * @brief Diese Methode publiziert eine MQTT Nachricht. Integer als Payload.
+ * 
+ * @param topic Topic (Name) der Nachricht
+ * @param payload Payload (Nutzdaten/Inhalt) der Nachricht
+ * @param retain Soll die Nachricht gespeichert werden, auch wenn das Topic niemand abonniert hat.
+ */
+void wio_mqtt::publishTopic_Integer(const char *topic, int payload, bool retain)
+{
+  char mqttPayload[20];
+  pubState = true;                                      // set publish state to TRUE, because somthing will be sended
+  Serial.println("PUBLISH");                            // print infos to SerialPort
+  Serial.print("Topic: "); Serial.println(topic);
+  Serial.print("Payload: "); Serial.println(payload);
+  itoa(payload, mqttPayload, 10);                       // Konvertierung Integer zu Char- Array
+  client.publish(topic, mqttPayload, retain);           // publish the message
+}
+
+/**
+ * @brief Diese Methode publiziert eine MQTT Nachricht. Fliesskommazahl (Float) als Payload. DerPayload wird auf 3 Nachkommastellen gekürzt
+ * 
+ * @param topic Topic (Name) der Nachricht
+ * @param payload Payload (Nutzdaten/Inhalt) der Nachricht
+ * @param retain Soll die Nachricht gespeichert werden, auch wenn das Topic niemand abonniert hat.
+ */
+void wio_mqtt::publishTopic_Float(const char *topic, float payload, bool retain)
+{
+  char mqttPayload[20];
+  pubState = true;                                      // set publish state to TRUE, because somthing will be sended
+  Serial.println("PUBLISH");                            // print infos to SerialPort
+  Serial.print("Topic: "); Serial.println(topic);
+  Serial.print("Payload: "); Serial.println(payload);
+  sprintf(mqttPayload, "%.3f", payload);                // Konvertierung Float zu Char- Array mit 3 Nachkommastellen
+  client.publish(topic, mqttPayload, retain);           // publish the message
 }
 
 /**
@@ -144,7 +200,7 @@ bool wio_mqtt::isConnected()
  */
 void wio_mqtt::reconnect()
 {
-  while (!client.connected())     // Loop until we're reconnected
+  //while (!client.connected())     // Loop until we're reconnected
   {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
@@ -171,7 +227,7 @@ void wio_mqtt::reconnect()
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
-      delay(5000);
+      //delay(5000);
     }
   }
 }

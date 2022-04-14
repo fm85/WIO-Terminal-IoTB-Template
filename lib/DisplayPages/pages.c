@@ -25,12 +25,12 @@ page_t pages_array[] =
     "Testseite",  
     { 
       //Name            | Typ     | Wert    | Textwert/Einheit  | Einstellung
-      { "Textausgabe",    TEXT,     0,        "HELLO",            DEFAULT},           // Line 1
-      { "Bargraph",       BAR,      50,       "",                 BAR_SHOW_VALUE},    // Line 2
-      { "Zahlausgabe",    NUMERIC,  50,       "",                 DECIMAL_PLACES_1},  // Line 3
-      { "Prozent",        NUMERIC,  24,       "%",                DEFAULT},           // Line 4
-      { "Zeit",           TIME,     221645,   "",                 TIME_HH_MM},        // Line 5
-      { "RSSI",           NUMERIC,  0,        "dB",               DEFAULT}            // Line 6
+      { "Textausgabe",    TEXT,     0,        "HELLO",            DEFAULT},           // Line 0
+      { "Bargraph",       BAR,      50,       "",                 BAR_SHOW_VALUE},    // Line 1
+      { "Zahlausgabe",    NUMERIC,  50,       "",                 DECIMAL_PLACES_1},  // Line 2
+      { "Prozent",        NUMERIC,  24,       "%",                DEFAULT},           // Line 3
+      { "Zeit",           TIME,     221645,   "",                 TIME_HH_MM},        // Line 4
+      { "RSSI",           NUMERIC,  0,        "dB",               DEFAULT}            // Line 5
     }
   },
 // Page 1
@@ -38,12 +38,12 @@ page_t pages_array[] =
     "TITEL",  
     { 
       //Name            | Typ     | Wert    | Textwert/Einheit  | Einstellung
-      { "Zeile 1",        TEXT,     0,        "",                 DEFAULT},           ///< Line 1
-      { "Zeile 2",        TEXT,     0,        "",                 DEFAULT},           ///< Line 2
-      { "Zeile 3",        TEXT,     0,        "",                 DEFAULT},           ///< Line 3
-      { "Zeile 4",        TEXT,     0,        "",                 DEFAULT},           ///< Line 4
-      { "Zeile 5",        TEXT,     0,        "",                 DEFAULT},           ///< Line 5
-      { "Zeile 6",        TEXT,     0,        "",                 DEFAULT}            ///< Line 6
+      { "Zeile 1",        TEXT,     0,        "",                 DEFAULT},           // Line 0
+      { "Zeile 2",        TEXT,     0,        "",                 DEFAULT},           // Line 1
+      { "Zeile 3",        TEXT,     0,        "",                 DEFAULT},           // Line 2
+      { "Zeile 4",        TEXT,     0,        "",                 DEFAULT},           // Line 3
+      { "Zeile 5",        TEXT,     0,        "",                 DEFAULT},           // Line 4
+      { "Zeile 6",        TEXT,     0,        "",                 DEFAULT}            // Line 5
     }
   },
 // Page 2
